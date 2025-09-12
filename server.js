@@ -5,13 +5,14 @@ const axios = require('axios');
 
 const app = express();
 
-// Permitir CORS desde localhost o cualquier origen
+// Configurar CORS
 app.use(cors({
-    origin: ['http://localhost'], // o '*' para permitir todos los orígenes
-    methods: ['GET','POST','OPTIONS'],
-    allowedHeaders: ['Content-Type','x-api-key-authorization','x-client-id']
+    origin: ['http://localhost'], // Cambia por tu frontend en producción
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'x-api-key-authorization', 'x-client-id']
 }));
 
+// Body parser
 app.use(bodyParser.json());
 
 // Variables de entorno
@@ -24,15 +25,18 @@ const CLIENT_ID = process.env.CLIENT_ID || 'user1';
 app.use((req, res, next) => {
     const apiKey = req.headers['x-api-key-authorization'];
     const clientId = req.headers['x-client-id'];
+
     if (apiKey !== API_KEY || clientId !== CLIENT_ID) {
         return res.status(401).send('No autorizado');
     }
     next();
 });
 
-// Endpoint para enviar mensaje a Telegram
+// Endpoint para enviar mensajes
 app.post('/send-message', async (req, res) => {
     const { mensaje, teclado } = req.body;
+    console.log("Mensaje recibido:", mensaje);
+    console.log("Teclado recibido:", teclado);
 
     try {
         const reply_markup = teclado ? JSON.stringify({ inline_keyboard: teclado }) : undefined;
@@ -46,12 +50,17 @@ app.post('/send-message', async (req, res) => {
             }
         );
 
-        res.send(response.data.result.text);
+        console.log("Respuesta de Telegram:", response.data);
+        res.send(response.data.result?.text || 'Mensaje enviado');
     } catch (error) {
-        console.error(error.response?.data || error.message);
+        console.error("Error Telegram:", error.response?.data || error.message);
         res.status(500).send(error.response?.data || 'Error al enviar mensaje');
     }
 });
 
+// Manejar preflight requests
+app.options('*', cors());
+
+// Iniciar servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
