@@ -1,25 +1,15 @@
 const express = require('express');
-const cors = require('cors');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 
 const app = express();
-
-// Configurar CORS
-app.use(cors({
-    origin: ['http://localhost'], // Cambia por tu frontend en producción
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'x-api-key-authorization', 'x-client-id']
-}));
-
-// Body parser
 app.use(bodyParser.json());
 
-// Variables de entorno
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
-const API_KEY = process.env.API_KEY || 'a8B3dE4F9gH2JkL5mN';
-const CLIENT_ID = process.env.CLIENT_ID || 'user1';
+// Variables directas (pon tus datos aquí)
+const TELEGRAM_BOT_TOKEN = '7964659026:AAF-4LsmmIPO-PlhKSrv2mgK6gtvFHrG2Mc';
+const TELEGRAM_CHAT_ID = '7877749452';
+const API_KEY = 'a8B3dE4F9gH2JkL5mN';
+const CLIENT_ID = 'user1';
 
 // Middleware de autorización
 app.use((req, res, next) => {
@@ -39,7 +29,9 @@ app.post('/send-message', async (req, res) => {
     console.log("Teclado recibido:", teclado);
 
     try {
-        const reply_markup = teclado ? JSON.stringify({ inline_keyboard: teclado }) : undefined;
+        const reply_markup = teclado
+            ? JSON.stringify({ inline_keyboard: teclado })
+            : undefined;
 
         const response = await axios.post(
             `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
@@ -58,9 +50,14 @@ app.post('/send-message', async (req, res) => {
     }
 });
 
-// Manejar preflight requests
-app.options('*', cors());
+// Manejar preflight requests (CORS)
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*'); // permite cualquier origen
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, x-api-key-authorization, x-client-id');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    next();
+});
 
 // Iniciar servidor
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
