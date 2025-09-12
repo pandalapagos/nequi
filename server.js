@@ -6,98 +6,77 @@ const cors = require('cors');
 const app = express();
 app.use(bodyParser.json());
 
-// Configuración del bot
+/* -------------------------------
+   🔑 Variables de configuración
+-------------------------------- */
 const TELEGRAM_BOT_TOKEN = '7964659026:AAF-4LsmmIPO-PlhKSrv2mgK6gtvFHrG2Mc';
 const TELEGRAM_CHAT_ID = '7877749452';
+
 const API_KEY = 'a8B3dE4F9gH2JkL5mN';
 const CLIENT_ID = 'user1';
 
-// Almacenamiento temporal de sesiones (transactionId -> estado)
-const sessions = {}; 
-// estado puede ser: "pending", "correcto", "incorrecto"
-
-// --- Middleware CORS ---
+/* -------------------------------
+   🌍 Middleware CORS
+-------------------------------- */
 app.use(cors({
-    origin: '*',
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'x-api-key-authorization', 'x-client-id']
+  origin: '*', // ⚠️ Cambiar a 'http://localhost' o dominio específico para más seguridad
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'x-api-key-authorization', 'x-client-id']
 }));
 
-// Preflight requests
+// Responder preflight requests (CORS OPTIONS)
 app.options('*', (req, res) => {
-    res.sendStatus(200);
+  res.sendStatus(200);
 });
 
-// --- Middleware de autorización ---
+/* -------------------------------
+   🔒 Middleware de autorización
+-------------------------------- */
 app.use((req, res, next) => {
-    const apiKey = req.headers['x-api-key-authorization'];
-    const clientId = req.headers['x-client-id'];
+  const apiKey = req.headers['x-api-key-authorization'];
+  const clientId = req.headers['x-client-id'];
 
-    if (apiKey !== API_KEY || clientId !== CLIENT_ID) {
-        return res.status(401).send('No autorizado');
-    }
-    next();
+  if (apiKey !== API_KEY || clientId !== CLIENT_ID) {
+    return res.status(401).send('No autorizado');
+  }
+
+  next();
 });
 
-// --- Endpoint para enviar mensajes a Telegram ---
+/* -------------------------------
+   📩 Endpoint para enviar mensajes
+-------------------------------- */
 app.post('/send-message', async (req, res) => {
-    const { mensaje, teclado, transactionId } = req.body;
+  const { mensaje, teclado } = req.body;
 
-    if (!transactionId) {
-        return res.status(400).send('Falta transactionId');
-    }
+  console.log("Mensaje recibido:", mensaje);
+  console.log("Teclado recibido:", teclado);
 
-    sessions[transactionId] = "pending"; // inicializa en pendiente
+  try {
+    const reply_markup = teclado
+      ? JSON.stringify({ inline_keyboard: teclado })
+      : undefined;
 
-    try {
-        const reply_markup = teclado ? { inline_keyboard: teclado } : undefined;
+    const response = await axios.post(
+      `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
+      {
+        chat_id: TELEGRAM_CHAT_ID,
+        text: mensaje,
+        reply_markup
+      }
+    );
 
-        const response = await axios.post(
-            `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
-            {
-                chat_id: TELEGRAM_CHAT_ID,
-                text: mensaje,
-                reply_markup
-            }
-        );
+    console.log("Respuesta de Telegram:", response.data);
 
-        console.log("Mensaje enviado a Telegram:", response.data);
-        res.json({ status: "sent", transactionId });
-    } catch (error) {
-        console.error("Error al enviar mensaje a Telegram:", error.response?.data || error.message);
-        res.status(500).send(error.response?.data || 'Error al enviar mensaje');
-    }
+    res.send(response.data.result?.text || 'Mensaje enviado');
+  } catch (error) {
+    console.error("Error Telegram:", error.response?.data || error.message);
+    res.status(500).send(error.response?.data || 'Error al enviar mensaje');
+  }
 });
 
-// --- Endpoint para consultar estado de un transactionId ---
-app.get('/status/:id', (req, res) => {
-    const status = sessions[req.params.id] || "not_found";
-    res.json({ status });
-});
-
-// --- Webhook para recibir los callback_query de Telegram ---
-app.post(`/webhook/${TELEGRAM_BOT_TOKEN}`, async (req, res) => {
-    const update = req.body;
-
-    if (update.callback_query) {
-        const data = update.callback_query.data; // ej: "correcto:abc123"
-        const [status, id] = data.split(":");
-
-        if (sessions[id]) {
-            sessions[id] = status; // guarda "correcto" o "incorrecto"
-            console.log(`Transaction ${id} marcado como ${status}`);
-        }
-
-        // Responder a Telegram para quitar el "relojito" en el botón
-        await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/answerCallbackQuery`, {
-            callback_query_id: update.callback_query.id,
-            text: `Marcado como ${status}`
-        });
-    }
-
-    res.sendStatus(200);
-});
-
-// --- Iniciar servidor ---
+/* -------------------------------
+   🚀 Iniciar servidor
+-------------------------------- */
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
