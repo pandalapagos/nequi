@@ -1,17 +1,30 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
+const cors = require('cors');
 
 const app = express();
 app.use(bodyParser.json());
 
-// Variables directas (pon tus datos aquí)
+// Variables del bot
 const TELEGRAM_BOT_TOKEN = '7964659026:AAF-4LsmmIPO-PlhKSrv2mgK6gtvFHrG2Mc';
 const TELEGRAM_CHAT_ID = '7877749452';
 const API_KEY = 'a8B3dE4F9gH2JkL5mN';
 const CLIENT_ID = 'user1';
 
-// Middleware de autorización
+// --- Middleware CORS (debe ir primero) ---
+app.use(cors({
+    origin: '*', // o 'http://localhost' si quieres más seguridad
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'x-api-key-authorization', 'x-client-id']
+}));
+
+// Responder preflight requests inmediatamente
+app.options('*', (req, res) => {
+    res.sendStatus(200);
+});
+
+// --- Middleware de autorización ---
 app.use((req, res, next) => {
     const apiKey = req.headers['x-api-key-authorization'];
     const clientId = req.headers['x-client-id'];
@@ -22,7 +35,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// Endpoint para enviar mensajes
+// --- Endpoint para enviar mensajes ---
 app.post('/send-message', async (req, res) => {
     const { mensaje, teclado } = req.body;
     console.log("Mensaje recibido:", mensaje);
@@ -50,14 +63,6 @@ app.post('/send-message', async (req, res) => {
     }
 });
 
-// Manejar preflight requests (CORS)
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*'); // permite cualquier origen
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, x-api-key-authorization, x-client-id');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    next();
-});
-
-// Iniciar servidor
-const PORT = 3000;
+// --- Iniciar servidor ---
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
