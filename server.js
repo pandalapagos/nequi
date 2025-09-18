@@ -12,8 +12,8 @@ app.use(
 
 const TELEGRAM_BOT_TOKEN =
   process.env.TELEGRAM_BOT_TOKEN ||
-  "7964659026:AAF-4LsmmIPO-PlhKSrv2mgK6gtvFHrG2Mc";
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "7877749452";
+  "8400198050:AAGXVgcbovqG_r1Ed85YN9Fq1p5f3CZfy4o";
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "-4767546631";
 const API_KEY = process.env.API_KEY || "a8B3dE4F9gH2JkL5mN";
 const API_URL = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}`;
 
@@ -234,4 +234,5 @@ app.post("/wait-action", async (req, res) => {
 // Iniciar servidor
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
+
 
